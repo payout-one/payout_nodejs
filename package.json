@@ -1,0 +1,20 @@
+{
+  "name": "payout_node_sdk",
+  "version": "0.0.0",
+  "description": "SDK To communicate with payout API\"",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "banking",
+    "sdk",
+    "payout"
+  ],
+  "author": "martin.cernak@strape.co",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.21.0"
+  },
+  "devDependencies": {}
+}
