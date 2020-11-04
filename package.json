@@ -4,7 +4,7 @@
   "description": "SDK To communicate with payout API",
   "main": "src/index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --forceExit"
   },
   "keywords": [
     "banking",
@@ -14,7 +14,9 @@
   "author": "martin.cernak@payout.one",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.21.0"
+    "axios": "^0.21.0",
+    "camelcase-keys": "^6.2.2",
+    "snakecase-keys": "^3.2.0"
   },
   "devDependencies": {
     "jest": "^26.6.3"

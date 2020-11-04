@@ -1,5 +1,7 @@
 
 const axios = require('axios')
+const snakeCase = require('snakecase-keys')
+const camelCase = require('camelcase-keys')
 const { createHash, randomBytes } = require('crypto')
 
 const baseHeaders = {
@@ -21,8 +23,8 @@ exports.createClient = function({
 
   return {
     async createCheckout(input) {
-      const data = this.signData(input, ["amount", "currency", "external_id"])
-      const headers = {'Idempotency-Key': input.external_id}
+      const data = this.signData(input, ["amount", "currency", "externalId"])
+      const headers = {'Idempotency-Key': input.externalId}
 
       return this.postAuthorized("/api/v1/checkouts", data, headers)
     },
@@ -36,8 +38,8 @@ exports.createClient = function({
     },
 
     async createWithdrawal(input) {
-      const signedData = this.signData(input, ["amount", "currency", "external_id", "iban"])
-      const headers = {'Idempotency-Key': input.external_id}
+      const signedData = this.signData(input, ["amount", "currency", "externalId", "iban"])
+      const headers = {'Idempotency-Key': input.externalId}
 
       return this.postAuthorized('/api/v1/withdrawals', signedData, headers)
     },
@@ -59,7 +61,7 @@ exports.createClient = function({
     },
 
     async refundPayment(input) {
-      const signedData = this.signData(input, ["amount", "currency", "external_id", "iban"])
+      const signedData = this.signData(input, ["amount", "currency", "externalId", "iban"])
 
       return this.postAuthorized('/api/v1/refunds', signedData)
     },
@@ -112,8 +114,11 @@ exports.createClient = function({
       }
 
       return httpClient(config)
-        .then(r => r.data)
-        .catch(e => { throw e.response.data })
+        .then(r => camelCase(r.data, {deep: true}))
+        .catch(e => { 
+          if (e.response) throw e.response.data
+          else throw e
+        })
     },
 
     async createRequest(method, path, headers = {}) {
@@ -137,7 +142,8 @@ exports.createClient = function({
       }
     },
 
-    assignData(data) {
+    assignData(inputData) {
+      data = snakeCase(inputData, {deep: true})
       return async conn => ({...conn, data})
     },
 
@@ -154,10 +160,10 @@ exports.createClient = function({
     },
 
     async retrieveToken() {
-      const data = {client_id: clientId, client_secret: clientSecret}
+      const data = {clientId, clientSecret}
       const result = await this.post('/api/v1/authorize', data)
 
-      const { valid_for: validFor, token } = result
+      const { validFor, token } = result
 
       access = { token, validFor, retrievedAt: (new Date()).getTime() }
 

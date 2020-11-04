@@ -1,7 +1,9 @@
 const { createClient } = require('../src/index')
+const snakeCase = require('snakecase-keys')
+const { checkout, tokenResponse, credentials } = require('./fixtures')
 
 test('create nonce and signature', () => {
-  const client = createClient({clientId: "Test", clientSecret: "the-secret"})
+  const client = createClient(credentials)
   const result = client.createNonceAndSignature(["key", "test"])
   
   expect(result).toEqual({
@@ -12,13 +14,12 @@ test('create nonce and signature', () => {
 
 test('retrieve token', async () => {
   const httpClient = jest.fn(_ => 
-    Promise.resolve({ data: { token: "test-token", valid_for: 5000 }})
+    Promise.resolve(tokenResponse)
   )
 
   const client = createClient({
-    clientId: "Test",
+    ...credentials,
     endpointUrl: "http://example.com",
-    clientSecret: "the-secret", 
     httpClient
   })
 
@@ -27,9 +28,12 @@ test('retrieve token', async () => {
   expect(httpClient.mock.calls.length).toBe(1)
 
   expect(httpClient.mock.calls[0][0]).toMatchObject({
+    data: {
+      client_id: "test-client-id",
+      client_secret: "test-client-secret"
+    },
     method: 'POST',
     url: "http://example.com/api/v1/authorize",
-    data: {client_id: "Test", client_secret: "the-secret"},
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json'
@@ -44,9 +48,7 @@ test('retrieve token', async () => {
 })
 
 test("get token called twice", async () => {
-  const httpClient = jest.fn(_ => 
-    Promise.resolve({ data: { token: "test-token", valid_for: 5000 }})
-  )
+  const httpClient = jest.fn(_ => Promise.resolve(tokenResponse))
 
   const client = createClient({
     clientId: "Test",
@@ -62,32 +64,12 @@ test("get token called twice", async () => {
 })
 
 test("create checkout", async () => {
-  const input = {
-    amount: 683,
-    currency: "EUR",
-    customer: {
-      email: "john.doe@payout.one",
-      first_name: "John",
-      last_name: "Doe"
-    },
-    external_id: "844c65d5-55a1-6530-f54e-02ddc9ce7b18",
-    metadata: {
-      note:"Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been."
-    },
-    redirect_url: "https://payout.one/payment/redirect"
-  }
-
   const httpClient = jest.fn(r => {
     switch(r.url) {
       case "http://example.com/api/v1/authorize": 
-        return Promise.resolve({ 
-          data: { 
-            token: "test-token", 
-            valid_for: 5000 
-          }
-        })
+        return Promise.resolve(tokenResponse)
       default:
-        return Promise.resolve({ data: input })
+        return Promise.resolve({ data: checkout })
     }
   })
   
@@ -98,9 +80,9 @@ test("create checkout", async () => {
     httpClient
   })
 
-  const response = await client.createCheckout(input)
+  const response = await client.createCheckout(checkout)
 
-  expect(response).toMatchObject(input)
+  expect(response).toMatchObject(checkout)
 
   expect(httpClient.mock.calls.length).toBe(2)
   expect(httpClient.mock.calls[1][0]).toEqual({
@@ -110,12 +92,82 @@ test("create checkout", async () => {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'Authorization': 'Bearer test-token',
-      'Idempotency-Key': input.external_id
+      'Idempotency-Key': checkout.externalId
     },
     data: {
-      ...input, 
+      ...snakeCase(checkout), 
       nonce: expect.any(String), 
       signature: expect.any(String)
+    }
+  })
+})
+
+test("listCheckouts", async () => {
+  const httpClient = jest.fn(r => {
+    switch(r.url) {
+      case "http://example.com/api/v1/authorize": 
+        return Promise.resolve(tokenResponse) 
+      default:
+        return Promise.resolve({ data: [checkout] })
+    }
+  })
+
+  const client = createClient({
+    clientId: "Test",
+    endpointUrl: "http://example.com",
+    clientSecret: "the-secret", 
+    httpClient
+  })
+
+  const response = await client.listCheckouts({limit: 5, offset: 2})
+
+  expect(response).toMatchObject([checkout])
+
+  expect(httpClient.mock.calls.length).toBe(2)
+  expect(httpClient.mock.calls[1][0]).toEqual({
+    url: "http://example.com/api/v1/checkouts",
+    method: 'GET',
+    params: {
+      limit: 5,
+      offset: 2
+    },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer test-token',
+    }
+  })
+})
+
+test("getCheckout", async () => {
+  const httpClient = jest.fn(r => {
+    switch(r.url) {
+      case "http://example.com/api/v1/authorize": 
+        return Promise.resolve(tokenResponse)
+      default:
+        return Promise.resolve({ data: checkout })
+    }
+  })
+
+  const client = createClient({
+    clientId: "Test",
+    endpointUrl: "http://example.com",
+    clientSecret: "the-secret", 
+    httpClient
+  })
+
+  const response = await client.getCheckout(124)
+
+  expect(response).toMatchObject(checkout)
+
+  expect(httpClient.mock.calls.length).toBe(2)
+  expect(httpClient.mock.calls[1][0]).toEqual({
+    url: "http://example.com/api/v1/checkouts/124",
+    method: 'GET',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer test-token',
     }
   })
 })
