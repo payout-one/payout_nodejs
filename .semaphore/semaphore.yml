@@ -1,0 +1,45 @@
+version: v1.0
+name: Build Flow
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+blocks:
+  - name: Set up
+    task:
+      jobs:
+        - name: Compile and deps
+          commands:
+            - checkout
+            - sem-version node 12.18.2
+            - yarn install
+            - cache store npm-$SEMAPHORE_WORKFLOW_NUMBER ./node_modules
+      agent:
+        machine:
+          type: e1-standard-4
+          os_image: ubuntu1804
+    skip:
+      when: tag =~ '.*'
+    dependencies: []
+  - name: Analyze code
+    task:
+      prologue:
+        commands:
+          - checkout
+          - sem-version node 12.18.2
+          - cache restore npm-$SEMAPHORE_WORKFLOW_NUMBER
+      jobs:
+        - name: Lint
+          commands:
+            - npm run lint
+        - name: Test
+          commands:
+            - npm test
+      agent:
+        machine:
+          type: e1-standard-2
+          os_image: ubuntu1804
+    skip:
+      when: tag =~ '.*'
+    dependencies:
+      - Set up
