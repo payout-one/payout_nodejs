@@ -1,4 +1,3 @@
-
 const axios = require('axios')
 const snakeCase = require('snakecase-keys')
 const camelCase = require('camelcase-keys')
@@ -9,6 +8,45 @@ const baseHeaders = {
   'Accept': 'application/json'
 }
 
+/**
+ * @typedef HttpRequest
+ * @param {'GET' | 'POST'} method
+ * @param {object} [params]
+ * @param {object} [headers]
+ * @param {object} [data]
+ * @param {string} url
+ */
+
+/**
+ * Function to execute http requests
+ * 
+ * @name HttpClient
+ * @function
+ * @param {HttpRequest} conn 
+ * @return {Promise<object>}
+ */
+
+/**
+ * @typedef ClientOptions
+ * @type {object}
+ * @property {string} clientId
+ * @property {string} clientSecret
+ * @property {string} [endpointUrl] - alternative API url, mostly useful for testing
+ * @property {HttpClient} [httpClient] - client to use, defaults to `axios`
+ */
+
+/**
+ * @typedef {Checkout}
+ * @type {object}
+ * @property {string} 
+ */
+
+/**
+ * Create new payout API client
+ * 
+ * @param {ClientOptions} options
+ * @return {Client} 
+ */
 exports.createClient = function({
   clientId, 
   clientSecret, 
@@ -29,7 +67,7 @@ exports.createClient = function({
       return this.postAuthorized("/api/v1/checkouts", data, headers)
     },
 
-    async listCheckouts(params) {
+    async listCheckouts(params = {}) {
       return this.getAuthorizedWithParams('/api/v1/checkouts', params)
     },
 

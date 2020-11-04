@@ -4,7 +4,8 @@
   "description": "SDK To communicate with payout API",
   "main": "src/index.js",
   "scripts": {
-    "test": "jest --forceExit"
+    "test": "jest --forceExit",
+    "doc": "jsdoc ./src"
   },
   "keywords": [
     "banking",
@@ -19,6 +20,8 @@
     "snakecase-keys": "^3.2.0"
   },
   "devDependencies": {
-    "jest": "^26.6.3"
+    "eslint": "^7.12.1",
+    "jest": "^26.6.3",
+    "jsdoc": "^3.6.6"
   }
 }
