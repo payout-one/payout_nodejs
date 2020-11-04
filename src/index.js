@@ -7,7 +7,12 @@ const baseHeaders = {
   'Accept': 'application/json'
 }
 
-exports.createClient = function({clientId, clientSecret, endpointUrl = "https://app.payout.one"}) {
+exports.createClient = function({
+  clientId, 
+  clientSecret, 
+  httpClient = axios,
+  endpointUrl = "https://app.payout.one"
+}) {
   let access = {
     token: null,
     retrievedAt: 0,
@@ -32,8 +37,9 @@ exports.createClient = function({clientId, clientSecret, endpointUrl = "https://
 
     async createWithdrawal(input) {
       const signedData = this.signData(input, ["amount", "currency", "external_id", "iban"])
+      const headers = {'Idempotency-Key': input.external_id}
 
-      return this.postAuthorized('/api/v1/withdrawals', signedData)
+      return this.postAuthorized('/api/v1/withdrawals', signedData, headers)
     },
 
     async listWithdrawals(params) {
@@ -105,7 +111,9 @@ exports.createClient = function({clientId, clientSecret, endpointUrl = "https://
         headers: {...baseHeaders, ...conn.headers}
       }
 
-      return axios(config)
+      return httpClient(config)
+        .then(r => r.data)
+        .catch(e => { throw e.response.data })
     },
 
     async createRequest(method, path, headers = {}) {
@@ -137,15 +145,6 @@ exports.createClient = function({clientId, clientSecret, endpointUrl = "https://
       return async conn => ({...conn, params})
     },
 
-    async retrieveToken() {
-      const data = {client_id: clientId, client_secret: clientSecret}
-      const result = await this.post('/api/v1/authorize', data)
-
-      const { valid_for: validFor, token } = result.data
-
-      return access = { token, validFor, retrievedAt: (new Date()).getTime() }
-    },
-
     async getToken() {
       if (!access.token || ((access.validFor * 1000) + access.retrievedAt) < (new Date()).getTime()) {
         await this.retrieveToken()
@@ -154,14 +153,27 @@ exports.createClient = function({clientId, clientSecret, endpointUrl = "https://
       return access.token
     },
 
+    async retrieveToken() {
+      const data = {client_id: clientId, client_secret: clientSecret}
+      const result = await this.post('/api/v1/authorize', data)
+
+      const { valid_for: validFor, token } = result
+
+      access = { token, validFor, retrievedAt: (new Date()).getTime() }
+
+      return access
+    },
+
     createNonceAndSignature(params) {
       const nonce = randomBytes(16).toString('base64');
       const content = `${params.join('|')}|${nonce}|${clientSecret}`
 
-      return createHash('sha256')
+      const signature = createHash('sha256')
         .update(content)
         .digest('hex')
         .toString()
+
+      return { nonce, signature }
     }
   }
 }

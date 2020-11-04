@@ -1,7 +1,7 @@
 {
   "name": "payout_node_sdk",
   "version": "0.0.0",
-  "description": "SDK To communicate with payout API\"",
+  "description": "SDK To communicate with payout API",
   "main": "src/index.js",
   "scripts": {
     "test": "jest"
@@ -11,10 +11,12 @@
     "sdk",
     "payout"
   ],
-  "author": "martin.cernak@strape.co",
+  "author": "martin.cernak@payout.one",
   "license": "MIT",
   "dependencies": {
     "axios": "^0.21.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "jest": "^26.6.3"
+  }
 }
