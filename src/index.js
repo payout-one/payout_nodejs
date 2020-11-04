@@ -15,44 +15,134 @@ exports.createClient = function({clientId, clientSecret, endpointUrl = "https://
   }
 
   return {
+    async createCheckout(input) {
+      const data = this.signData(input, ["amount", "currency", "external_id"])
+      const headers = {'Idempotency-Key': input.external_id}
+
+      return this.postAuthorized("/api/v1/checkouts", data, headers)
+    },
+
+    async listCheckouts(params) {
+      return this.getAuthorizedWithParams('/api/v1/checkouts', params)
+    },
+
+    async getCheckout(checkoutId) {
+      return this.getAuthorized(`/api/v1/checkouts/${checkoutId}`)
+    },
+
+    async createWithdrawal(input) {
+      const signedData = this.signData(input, ["amount", "currency", "external_id", "iban"])
+
+      return this.postAuthorized('/api/v1/withdrawals', signedData)
+    },
+
+    async listWithdrawals(params) {
+      return this.getAuthorizedWithParams('/api/v1/withdrawals', params)
+    },
+
+    async getWithdrawal(withdrawalId) {
+      return this.getAuthorized(`/api/v1/withdrawals/${withdrawalId}`)
+    },
+
+    async listPaymentMethods() {
+      return this.getAuthorized('/api/v1/payment_methods')
+    },
+
+    async getBalance() {
+      return this.getAuthorized('/api/v1/balance')
+    },
+
+    async refundPayment(input) {
+      const signedData = this.signData(input, ["amount", "currency", "external_id", "iban"])
+
+      return this.postAuthorized('/api/v1/refunds', signedData)
+    },
+
     async post(path, data, headers = {}) {
-      const config = {
-        method: "POST",
-        url: `${endpointUrl}${path}`,
-        headers: {...baseHeaders, ...headers},
-        data: data
+      return this.createRequest('POST', path, headers)
+        .then(this.assignData(data))
+        .then(this.execute)
+    },
+
+    async postAuthorized(path, data, headers = {}) {
+      return this.createRequest('POST', path, headers)
+        .then(this.assignData(data))
+        .then(this.authorize())
+        .then(this.execute)
+    },
+
+    async getAuthorized(path, headers = {}) {
+      return this.createRequest('GET', path, headers)
+        .then(this.authorize())
+        .then(this.execute)
+    },
+
+    async getAuthorizedWithParams(path, params) {
+      return this.createRequest('GET', path)
+        .then(this.assignParams(params))
+        .then(this.authorize())
+        .then(conn => {
+          console.log('conn', conn)
+          return conn
+        })
+        .then(this.execute)
+    },
+
+    signData(input, signKeys) {
+      const signValues = signKeys.map(key => input[key])
+
+      const {
+        nonce,
+        signature
+      } = this.createNonceAndSignature(signValues)
+
+      return {
+        ...input,
+        nonce,
+        signature
       }
+    },
+
+    async execute(conn) {
+      const config = {
+        ...conn,
+        headers: {...baseHeaders, ...conn.headers}
+      }
+
+      console.log(config, 'config')
 
       return axios(config)
     },
 
-    async postAuthorized(path, data, inputHeaders = {}) {
-      const token = await this.getToken()
-
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        ...inputHeaders
-      }
-
-      this.post(path, data, headers)
-    },
-
-    async getAuthorized(path, inputHeaders = {}) {
-      const token = await this.getToken()
-
-      const headers = {
-        ...baseHeaders,
-        'Authorization': `Bearer ${token}`,
-        ...inputHeaders
-      }
-
-      const config = {
-        method: "GET",
+    async createRequest(method, path, headers = {}) {
+      return {
+        method,
         url: `${endpointUrl}${path}`,
         headers
       }
+    },
 
-      return axios(config)
+    authorize() {
+      return async conn => {
+        const token = await this.getToken()
+
+        const config = {
+          ...conn,
+          headers: {...conn.headers, 'Authorization': `Bearer ${token}`}
+        }
+
+        console.log('authorize', config)
+
+        return config
+      }
+    },
+
+    assignData(data) {
+      return async conn => ({...conn, data})
+    },
+
+    assignParams(params) {
+      return async conn => ({...conn, params})
     },
 
     async retrieveToken() {
@@ -80,85 +170,6 @@ exports.createClient = function({clientId, clientSecret, endpointUrl = "https://
         .update(content)
         .digest('hex')
         .toString()
-    },
-
-    signData(input, signData) {
-      const {
-        nonce,
-        signature
-      } = this.createNonceAndSignature(signData)
-
-      return {
-        ...input,
-        nonce,
-        signature
-      }
-    },
-
-    async createCheckout(input) {
-      const {
-        currency,
-        amount,
-        external_id: externalId,
-      } = input
-
-      const data = this.signData(input, [amount, currency, externalId])
-
-      const headers = {
-        'Idempotency-Key': externalId
-      }
-
-      return this.postAuthorized("/api/v1/checkouts", data, headers)
-    },
-
-    async listCheckouts() {
-      return this.getAuthorized('/api/v1/checkouts')
-    },
-
-    async getCheckout(checkoutId) {
-      return this.getAuthorized(`/api/v1/checkouts/${checkoutId}`)
-    },
-
-    async createWithdrawal(input) {
-      const {
-        amount,
-        currency,
-        external_id: externalId,
-        iban
-      } = input
-
-      const data = this.signData(input, [amount, currency, externalId, iban])
-
-      return this.postAuthorized('/api/v1/withdrawals', data)
-    },
-
-    async listWithdrawals() {
-      return this.getAuthorized('/api/v1/withdrawals')
-    },
-
-    async getWithdrawal(withdrawalId) {
-      return this.getAuthorized(`/api/v1/withdrawals/${withdrawalId}`)
-    },
-
-    async listPaymentMethods() {
-      return this.getAuthorized('/api/v1/payment_methods')
-    },
-
-    async getBalance() {
-      return this.getAuthorized('/api/v1/balance')
-    },
-
-    async refundPayment(input) {
-      const {
-        amount,
-        currency,
-        external_id: externalId,
-        iban
-      } = input
-
-      const data = this.signData(input, [amount, currency, externalId, iban])
-
-      return this.postAuthorized('/api/v1/refunds', data)
     }
   }
 }
