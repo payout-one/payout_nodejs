@@ -81,10 +81,6 @@ exports.createClient = function({clientId, clientSecret, endpointUrl = "https://
       return this.createRequest('GET', path)
         .then(this.assignParams(params))
         .then(this.authorize())
-        .then(conn => {
-          console.log('conn', conn)
-          return conn
-        })
         .then(this.execute)
     },
 
@@ -109,8 +105,6 @@ exports.createClient = function({clientId, clientSecret, endpointUrl = "https://
         headers: {...baseHeaders, ...conn.headers}
       }
 
-      console.log(config, 'config')
-
       return axios(config)
     },
 
@@ -130,8 +124,6 @@ exports.createClient = function({clientId, clientSecret, endpointUrl = "https://
           ...conn,
           headers: {...conn.headers, 'Authorization': `Bearer ${token}`}
         }
-
-        console.log('authorize', config)
 
         return config
       }
