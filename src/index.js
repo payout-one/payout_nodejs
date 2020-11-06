@@ -153,8 +153,8 @@ exports.createClient = function({
 
       return httpClient(config)
         .then(r => camelCase(r.data, {deep: true}))
-        .catch(e => { 
-          if (e.response) throw e.response.data
+        .catch(async e => {
+          if (e.response && e.response.data) throw e.response.data
           else throw e
         })
     },
@@ -200,7 +200,6 @@ exports.createClient = function({
     async retrieveToken() {
       const data = {clientId, clientSecret}
       const result = await this.post('/api/v1/authorize', data)
-
       const { validFor, token } = result
 
       access = { token, validFor, retrievedAt: (new Date()).getTime() }

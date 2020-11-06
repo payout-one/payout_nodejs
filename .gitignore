@@ -1,4 +1,5 @@
 node_modules
 tmp.js
+test.sh
 coverage
 out
