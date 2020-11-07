@@ -18,9 +18,15 @@ exports.checkout = {
     firstName: "John",
     lastName: "Doe"
   },
-  externalId: "844c65d5-55a1-6530-f54e-02ddc9ce7b18",
+  externalId: "ext-id",
   metadata: {
     note:"Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been."
   },
   redirectUrl: "https://payout.one/payment/redirect"
+}
+
+exports.checkoutSigned = {
+  ...exports.checkout,
+  nonce: "test-nonce",
+  signature: "6552bbdd00833d1197f4c0b0768b55c1e5a62ea8afe439dfaabe22981bf03632"
 }

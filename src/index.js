@@ -8,6 +8,19 @@ const baseHeaders = {
   'Accept': 'application/json'
 }
 
+const checkoutSignKeys = [
+  "amount", 
+  "currency", 
+  "externalId"
+]
+
+const withdrawalSignKeys = [
+  "amount", 
+  "currency", 
+  "externalId", 
+  "iban"
+]
+
 /**
  * @typedef HttpRequest
  * @param {'GET' | 'POST'} method
@@ -61,33 +74,27 @@ exports.createClient = function({
 
   return {
     async createCheckout(input) {
-      const data = this.signData(input, ["amount", "currency", "externalId"])
-      const headers = {'Idempotency-Key': input.externalId}
-
-      return this.postAuthorized("/api/v1/checkouts", data, headers)
+      return this.postAuthorizedSigned("/api/v1/checkouts", input, checkoutSignKeys)
     },
 
     async listCheckouts(params = {}) {
-      return this.getAuthorizedWithParams('/api/v1/checkouts', params)
+      return this.listAuthorizedSigned('/api/v1/checkouts', params, checkoutSignKeys)
     },
 
     async getCheckout(checkoutId) {
-      return this.getAuthorized(`/api/v1/checkouts/${checkoutId}`)
+      return this.getAuthorizedSigned(`/api/v1/checkouts/${checkoutId}`, checkoutSignKeys)
     },
 
     async createWithdrawal(input) {
-      const signedData = this.signData(input, ["amount", "currency", "externalId", "iban"])
-      const headers = {'Idempotency-Key': input.externalId}
-
-      return this.postAuthorized('/api/v1/withdrawals', signedData, headers)
+      return this.postAuthorizedSigned('/api/v1/withdrawals', input, withdrawalSignKeys)
     },
 
     async listWithdrawals(params) {
-      return this.getAuthorizedWithParams('/api/v1/withdrawals', params)
+      return this.listAuthorizedSigned('/api/v1/withdrawals', params, withdrawalSignKeys)
     },
 
     async getWithdrawal(withdrawalId) {
-      return this.getAuthorized(`/api/v1/withdrawals/${withdrawalId}`)
+      return this.getAuthorizedSigned(`/api/v1/withdrawals/${withdrawalId}`, withdrawalSignKeys)
     },
 
     async listPaymentMethods() {
@@ -98,56 +105,94 @@ exports.createClient = function({
       return this.getAuthorized('/api/v1/balance')
     },
 
-    async refundPayment(input) {
-      const signedData = this.signData(input, ["amount", "currency", "externalId", "iban"])
-
-      return this.postAuthorized('/api/v1/refunds', signedData)
-    },
-
     async post(path, data, headers = {}) {
       return this.createRequest('POST', path, headers)
         .then(this.assignData(data))
         .then(this.execute)
     },
 
-    async postAuthorized(path, data, headers = {}) {
-      return this.createRequest('POST', path, headers)
+    async postAuthorizedSigned(path, data, signatureKeys) {
+      return this.createRequest('POST', path)
         .then(this.assignData(data))
+        .then(this.signData(signatureKeys))
+        .then(this.authorize())
+        .then(this.idempotencyKey("externalId"))
+        .then(this.execute)
+        .then(this.validateSignature(signatureKeys))
+    },
+
+    async getAuthorized(path) {
+      return this.createRequest('GET', path)
         .then(this.authorize())
         .then(this.execute)
     },
 
-    async getAuthorized(path, headers = {}) {
-      return this.createRequest('GET', path, headers)
-        .then(this.authorize())
-        .then(this.execute)
+    async getAuthorizedSigned(path, keys) {
+      return this.getAuthorized(path)
+        .then(this.validateSignature(keys))
     },
 
-    async getAuthorizedWithParams(path, params) {
+    async listAuthorizedSigned(path, params, keys) {
+      const signatureValidator = this.validateSignature(keys)
+
       return this.createRequest('GET', path)
         .then(this.assignParams(params))
         .then(this.authorize())
         .then(this.execute)
+        .then(r => Promise.all(r.map(signatureValidator)))
     },
 
-    signData(input, signKeys) {
-      const signValues = signKeys.map(key => input[key])
+    signData(keys) {
+      return async conn => {
+        const signValues = keys.map(key => conn.data[key] || "")
 
-      const {
-        nonce,
-        signature
-      } = this.createNonceAndSignature(signValues)
+        const {
+          nonce,
+          signature
+        } = this.createNonceAndSignature(signValues)
 
-      return {
-        ...input,
-        nonce,
-        signature
+        return {
+          ...conn, 
+          data: {
+            ...conn.data,
+            nonce,
+            signature
+          }
+        }
+      }
+    },
+
+    validateSignature(signKeys) {
+      return async data => {
+        const {
+          nonce,
+          signature: remoteSignature
+        } = data
+
+        const localSignature = this.signValues(nonce, signKeys.map(k => data[k] || ""))
+
+        if (remoteSignature != localSignature) {
+          throw new Error("Invalid server signature")
+        } else {
+          return data
+        }
+      }
+    },
+
+    idempotencyKey(key) {
+      return async conn => {
+        if (conn.data.hasOwnProperty(key)) {
+          return {...conn, headers: {...conn.headers, "Idempotency-Key": conn.data[key]}}
+        } else {
+          return conn
+        }
       }
     },
 
     async execute(conn) {
       const config = {
         ...conn,
+        data: conn.data ? snakeCase(conn.data, {deep: true}) : null,
         headers: {...baseHeaders, ...conn.headers}
       }
 
@@ -180,8 +225,7 @@ exports.createClient = function({
       }
     },
 
-    assignData(inputData) {
-      data = snakeCase(inputData, {deep: true})
+    assignData(data) {
       return async conn => ({...conn, data})
     },
 
@@ -209,14 +253,14 @@ exports.createClient = function({
 
     createNonceAndSignature(params) {
       const nonce = randomBytes(16).toString('base64');
-      const content = `${params.join('|')}|${nonce}|${clientSecret}`
+      return { nonce, signature: this.signValues(nonce, params) }
+    },
 
-      const signature = createHash('sha256')
-        .update(content)
+    signValues(nonce, values) {
+      return createHash('sha256')
+        .update(`${values.join('|')}|${nonce}|${clientSecret}`)
         .digest('hex')
         .toString()
-
-      return { nonce, signature }
     }
   }
 }
