@@ -1,6 +1,6 @@
 const { createClient } = require('../src/index')
 const snakeCase = require('snakecase-keys')
-const { checkout, tokenResponse, credentials } = require('./fixtures')
+const { checkout, checkoutSigned, tokenResponse, credentials } = require('./fixtures')
 
 test('create nonce and signature', () => {
   const client = createClient(credentials)
@@ -69,7 +69,7 @@ test("create checkout", async () => {
       case "http://example.com/api/v1/authorize": 
         return Promise.resolve(tokenResponse)
       default:
-        return Promise.resolve({ data: checkout })
+        return Promise.resolve({ data: checkoutSigned })
     }
   })
   
@@ -108,7 +108,7 @@ test("listCheckouts", async () => {
       case "http://example.com/api/v1/authorize": 
         return Promise.resolve(tokenResponse) 
       default:
-        return Promise.resolve({ data: [checkout] })
+        return Promise.resolve({ data: [checkoutSigned] })
     }
   })
 
@@ -127,6 +127,7 @@ test("listCheckouts", async () => {
   expect(httpClient.mock.calls[1][0]).toEqual({
     url: "http://example.com/api/v1/checkouts",
     method: 'GET',
+    data: null,
     params: {
       limit: 5,
       offset: 2
@@ -145,7 +146,7 @@ test("getCheckout", async () => {
       case "http://example.com/api/v1/authorize": 
         return Promise.resolve(tokenResponse)
       default:
-        return Promise.resolve({ data: checkout })
+        return Promise.resolve({ data: checkoutSigned })
     }
   })
 
@@ -164,6 +165,7 @@ test("getCheckout", async () => {
   expect(httpClient.mock.calls[1][0]).toEqual({
     url: "http://example.com/api/v1/checkouts/124",
     method: 'GET',
+    data: null,
     headers: { 
       'Content-Type': 'application/json',
       'Accept': 'application/json',
