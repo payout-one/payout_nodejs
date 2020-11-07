@@ -1,7 +1,7 @@
 {
   "name": "payout_node_sdk",
   "version": "0.0.0",
-  "description": "SDK To communicate with payout API",
+  "description": "SDK To communicate with payout API, https://postman.payout.one/",
   "main": "src/index.js",
   "scripts": {
     "test": "jest --forceExit",
@@ -13,6 +13,10 @@
     "sdk",
     "payout"
   ],
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/payout-one/payout_nodejs"
+  },
   "author": "martin.cernak@payout.one",
   "license": "MIT",
   "dependencies": {

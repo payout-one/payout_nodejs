@@ -49,10 +49,69 @@ const withdrawalSignKeys = [
  */
 
 /**
- * @typedef {Checkout}
+ * @typedef Checkout
  * @type {object}
- * @property {string} 
+ * @property {string} externalId
  */
+
+ /**
+  * @typedef LimitOffset
+  * @param {limit} number
+  * @param {offset} number
+  */
+
+ /**
+ * @typedef Withdrawal
+ * @type {object}
+ * @property {string} externalId
+ */
+
+/**
+ * @callback CreateCheckout
+ * @param {Checkout} checkout
+ * @return {Promise<Checkout>} 
+ */
+
+ /**
+ * @callback ListCheckouts
+ * @param {LimitOffset} [limitOffset]
+ * @return {Promise<Array<Checkout>>} 
+ */
+
+ /**
+  * @callback GetCheckout
+  * @param {number} checkoutId
+  * @return {Promise<Checkout>} 
+  */
+
+  /**
+ * @callback CreateWithdrawal
+ * @param {Withdrawal} withdrawal
+ * @return {Promise<Withdrawal>} 
+ */
+
+ /**
+ * @callback ListWithdrawals
+ * @param {LimitOffset} [limitOffset]
+ * @return {Promise<Array<Withdrawal>>} 
+ */
+
+ /**
+  * @callback GetWithdrawal
+  * @param {number} withdrawalId
+  * @return {Promise<Withdrawal>} 
+  */
+
+ /**
+  * @typedef Client
+  * @type {object}
+  * @property {CreateCheckout} createCheckout
+  * @property {ListCheckouts} listCheckouts
+  * @property {GetCheckout} getCheckout
+  * @property {CreateWithdrawal} createWithdrawal
+  * @property {ListWithdrawals} listWithdrawals
+  * @property {GetWithdrawal} getWithdrawal
+  */
 
 /**
  * Create new payout API client
