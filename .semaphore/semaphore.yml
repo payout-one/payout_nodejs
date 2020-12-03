@@ -36,10 +36,6 @@ blocks:
           commands:
             - npm run lint
 
-        - name: Compile
-          commands:
-            - npm run build
-            
         - name: Test
           commands:
             - npm test
