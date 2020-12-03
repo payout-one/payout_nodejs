@@ -5,4 +5,5 @@ coverage
 tslint.json
 .prettierrc
 .semaphore
+__test__
 out
