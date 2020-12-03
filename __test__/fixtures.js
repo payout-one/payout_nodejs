@@ -1,4 +1,4 @@
-const { createClient } = require('../src/index')
+const { createClient } = require('payout_node_sdk')
 
 exports.credentials = {
   clientId: "test-client-id",

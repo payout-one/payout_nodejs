@@ -1,4 +1,4 @@
-const { createClient } = require('../src/index')
+const { createClient } = require('payout_node_sdk')
 const { tokenResponse, credentials, mockClient } = require('./fixtures')
 
 test('create nonce and signature', () => {

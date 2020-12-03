@@ -41,7 +41,7 @@ await client.createCheckout(checkout)
 ```
 Response should by signed `checkout`, it is not necessary to check signature
 since it is already checked in `sdk`
-```json
+```js
 {
   amount: 100
   currency: "EUR"
@@ -72,7 +72,7 @@ or
 await client.listCheckouts({offset: 3, limit: 2})
 ```
 Response will by list of signed checkouts
-```json
+```js
 [
   {
     amount:	100,
@@ -139,7 +139,7 @@ Get checkout by it's `id`
 await client.getCheckout(123)
 ```
 And response is
-```json
+```js
 {
   amount:	1050,
   currency:	"EUR",

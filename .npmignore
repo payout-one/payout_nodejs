@@ -1,0 +1,9 @@
+node_modules
+tmp.js
+test.sh
+coverage
+tslint.json
+.prettierrc
+.semaphore
+__test__
+out
