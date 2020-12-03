@@ -13,6 +13,8 @@ blocks:
             - checkout
             - sem-version node 12.18.2
             - yarn install
+            - npm run build
+            - cache store lib-$SEMAPHORE_WORKFLOW_NUMBER ./lib
             - cache store npm-$SEMAPHORE_WORKFLOW_NUMBER ./node_modules
       agent:
         machine:
@@ -28,6 +30,7 @@ blocks:
           - checkout
           - sem-version node 12.18.2
           - cache restore npm-$SEMAPHORE_WORKFLOW_NUMBER
+          - cache restore lib-$SEMAPHORE_WORKFLOW_NUMBER
       jobs:
         - name: Lint
           commands:
