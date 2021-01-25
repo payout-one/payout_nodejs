@@ -30,7 +30,7 @@ type ClientConfig = {
 
 type ScalarMap = {[key: string]: string|number}
 
-type HttpMethod = "GET" | "POST" | "PUT"
+type HttpMethod = "GET" | "POST" | "PUT" | "DELETE"
 
 type Mode = "standard" | "store_card" | "recurrent"
 
@@ -239,6 +239,14 @@ class Client {
     return this.getAuthorizedSigned(`/api/v1/withdrawals/${withdrawalId}`, withdrawalSignKeys) as Promise<Withdrawal>;
   }
 
+  async getTokenStatus(token : string) {
+    return this.getAuthorized(`/api/v1/tokens/${token}`) as Promise<Object>
+  }
+
+  async deleteToken(token : string) {
+    return this.deleteAuthorized(`/api/v1/tokens/${token}`) as Promise<Object>
+  }
+
   async listPaymentMethods() : Promise<PaymentMethod[]> {
     return this.getAuthorized('/api/v1/payment_methods') as Promise<PaymentMethod[]>
   }
@@ -250,6 +258,12 @@ class Client {
   async post(path : string, data : object, headers : ScalarMap = {}) {
     return this.createRequest('POST', path, headers)
       .then(this.assignData(data))
+      .then(this.execute())
+  }
+
+  async deleteAuthorized(path : string) {
+    return this.createRequest('DELETE', path)
+      .then(this.authorize())
       .then(this.execute())
   }
 
