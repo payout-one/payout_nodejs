@@ -32,6 +32,8 @@ type ScalarMap = {[key: string]: string|number}
 
 type HttpMethod = "GET" | "POST" | "PUT"
 
+type Mode = "standard" | "store_card" | "recurrent"
+
 type HttpRequest = {
   headers?: ScalarMap
   params?: ScalarMap
@@ -58,18 +60,6 @@ type Customer = {
   email: string
 }
 
-type Payment = {
-  amount: number,
-  createdAt: number,
-  currency: string,
-  externalId: string,
-  failure_reason: string,
-  id: number,
-  object: string,
-  paymentMethod: string,
-  status: string
-}
-
 type LimitOffset = {
   limit?: number
   offset?: number
@@ -78,8 +68,10 @@ type LimitOffset = {
 type CreateCheckout = {
   amount: number
   currency: string
-  customer: Customer 
-  externalId: string 
+  customer: Customer
+  externalId: string
+  mode: Mode
+  recurrent_token: string
   idempotencyKey?: string
   metadata?: ScalarMap
 }
@@ -91,7 +83,7 @@ type CreatedCheckout = {
   id: number
   externalId: string
   idempotencyKey: string
-  metadata: object,
+  metadata: object
   nonce: string
   object: string
   redirectUrl: string
