@@ -240,11 +240,11 @@ class Client {
   }
 
   async getTokenStatus(token : string) {
-    return this.getAuthorized(`/api/v1/tokens/${token}`) as Promise<Object>
+    return this.getAuthorized(`/api/v1/tokens/${token}`) as Promise<object>
   }
 
   async deleteToken(token : string) {
-    return this.deleteAuthorized(`/api/v1/tokens/${token}`) as Promise<Object>
+    return this.deleteAuthorized(`/api/v1/tokens/${token}`) as Promise<object>
   }
 
   async listPaymentMethods() : Promise<PaymentMethod[]> {
