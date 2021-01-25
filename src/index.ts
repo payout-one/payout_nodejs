@@ -30,7 +30,9 @@ type ClientConfig = {
 
 type ScalarMap = {[key: string]: string|number}
 
-type HttpMethod = "GET" | "POST" | "PUT"
+type HttpMethod = "GET" | "POST" | "PUT" | "DELETE"
+
+type Mode = "standard" | "store_card" | "recurrent"
 
 type HttpRequest = {
   headers?: ScalarMap
@@ -58,18 +60,6 @@ type Customer = {
   email: string
 }
 
-type Payment = {
-  amount: number,
-  createdAt: number,
-  currency: string,
-  externalId: string,
-  failure_reason: string,
-  id: number,
-  object: string,
-  paymentMethod: string,
-  status: string
-}
-
 type LimitOffset = {
   limit?: number
   offset?: number
@@ -78,8 +68,10 @@ type LimitOffset = {
 type CreateCheckout = {
   amount: number
   currency: string
-  customer: Customer 
-  externalId: string 
+  customer: Customer
+  externalId: string
+  mode?: Mode
+  recurrentToken?: string
   idempotencyKey?: string
   metadata?: ScalarMap
 }
@@ -91,7 +83,7 @@ type CreatedCheckout = {
   id: number
   externalId: string
   idempotencyKey: string
-  metadata: object,
+  metadata: object
   nonce: string
   object: string
   redirectUrl: string
@@ -142,17 +134,42 @@ type CreatedWithdrawal = {
 
 type Withdrawal = {
    amount: number
-   api_key_id: string
-   created_at: number
+   apiKeyId: string
+   createdAt: number
    currency: string
    customer: Customer
-   external_id: string
+   externalId: string
    iban: string
    id: number
    nonce: string
    object: string
    signature: string
    status: string
+}
+
+type TokenDetails = {
+  cardExpirationYear: string
+  cardExpirationMonth: string
+  cardNumberMasked: string
+  cardBrand: string
+  value: string
+  brandImageUrl: string
+  preferred: boolean
+  status: string
+}
+
+type TokenInvalid = {
+  errors: {
+    token: 'invalid'
+  }
+}
+
+type TokenStatus = {
+  status: TokenDetails | TokenInvalid | "no_tokens"
+}
+
+type TokenDeleted = {
+  status: "deleted"
 }
 
 type PaymentMethod = {
@@ -223,7 +240,7 @@ class Client {
     this.endpointUrl = config.endpointUrl;
   }
 
-  async createCheckout(input: CreateCheckout) : Promise<CreatedCheckout> {
+  async createCheckout(input: CreateCheckout) : Promise<CreatedCheckout | TokenInvalid> {
     return this.postAuthorizedSigned("/api/v1/checkouts", input, checkoutSignKeys) as Promise<CreatedCheckout>;
   }
 
@@ -247,6 +264,14 @@ class Client {
     return this.getAuthorizedSigned(`/api/v1/withdrawals/${withdrawalId}`, withdrawalSignKeys) as Promise<Withdrawal>;
   }
 
+  async getTokenStatus(token : string) {
+    return this.getAuthorized(`/api/v1/tokens/${token}/status`) as Promise<TokenStatus>
+  }
+
+  async deleteToken(token : string) {
+    return this.deleteAuthorized(`/api/v1/tokens/${token}`) as Promise<TokenDeleted>
+  }
+
   async listPaymentMethods() : Promise<PaymentMethod[]> {
     return this.getAuthorized('/api/v1/payment_methods') as Promise<PaymentMethod[]>
   }
@@ -258,6 +283,12 @@ class Client {
   async post(path : string, data : object, headers : ScalarMap = {}) {
     return this.createRequest('POST', path, headers)
       .then(this.assignData(data))
+      .then(this.execute())
+  }
+
+  async deleteAuthorized(path : string) {
+    return this.createRequest('DELETE', path)
+      .then(this.authorize())
       .then(this.execute())
   }
 
