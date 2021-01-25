@@ -70,8 +70,8 @@ type CreateCheckout = {
   currency: string
   customer: Customer
   externalId: string
-  mode: Mode
-  recurrentToken: string
+  mode?: Mode
+  recurrentToken?: string
   idempotencyKey?: string
   metadata?: ScalarMap
 }
