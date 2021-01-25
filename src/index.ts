@@ -71,7 +71,7 @@ type CreateCheckout = {
   customer: Customer
   externalId: string
   mode: Mode
-  recurrent_token: string
+  recurrentToken: string
   idempotencyKey?: string
   metadata?: ScalarMap
 }
@@ -134,17 +134,42 @@ type CreatedWithdrawal = {
 
 type Withdrawal = {
    amount: number
-   api_key_id: string
-   created_at: number
+   apiKeyId: string
+   createdAt: number
    currency: string
    customer: Customer
-   external_id: string
+   externalId: string
    iban: string
    id: number
    nonce: string
    object: string
    signature: string
    status: string
+}
+
+type TokenDetails = {
+  cardExpirationYear: string
+  cardExpirationMonth: string
+  cardNumberMasked: string
+  cardBrand: string
+  value: string
+  brandImageUrl: string
+  preferred: boolean
+  status: string
+}
+
+type TokenInvalid = {
+  errors: {
+    token: 'invalid'
+  }
+}
+
+type TokenStatus = {
+  status: TokenDetails | TokenInvalid | "no_tokens"
+}
+
+type TokenDeleted = {
+  status: "deleted"
 }
 
 type PaymentMethod = {
@@ -215,7 +240,7 @@ class Client {
     this.endpointUrl = config.endpointUrl;
   }
 
-  async createCheckout(input: CreateCheckout) : Promise<CreatedCheckout> {
+  async createCheckout(input: CreateCheckout) : Promise<CreatedCheckout | TokenInvalid> {
     return this.postAuthorizedSigned("/api/v1/checkouts", input, checkoutSignKeys) as Promise<CreatedCheckout>;
   }
 
@@ -240,11 +265,11 @@ class Client {
   }
 
   async getTokenStatus(token : string) {
-    return this.getAuthorized(`/api/v1/tokens/${token}`) as Promise<object>
+    return this.getAuthorized(`/api/v1/tokens/${token}/status`) as Promise<TokenStatus>
   }
 
   async deleteToken(token : string) {
-    return this.deleteAuthorized(`/api/v1/tokens/${token}`) as Promise<object>
+    return this.deleteAuthorized(`/api/v1/tokens/${token}`) as Promise<TokenDeleted>
   }
 
   async listPaymentMethods() : Promise<PaymentMethod[]> {
