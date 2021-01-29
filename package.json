@@ -1,6 +1,6 @@
 {
   "name": "payout_node_sdk",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "SDK To communicate with payout API, https://postman.payout.one/",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",

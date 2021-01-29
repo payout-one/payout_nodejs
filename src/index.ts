@@ -21,20 +21,20 @@ const withdrawalSignKeys = [
   "iban"
 ]
 
-type ClientConfig = {
+export type ClientConfig = {
   clientId: string;
   clientSecret: string;
   httpClient?: HttpClient;
   endpointUrl?: string;
 }
 
-type ScalarMap = {[key: string]: string|number}
+export type ScalarMap = {[key: string]: string|number}
 
-type HttpMethod = "GET" | "POST" | "PUT" | "DELETE"
+export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE"
 
-type Mode = "standard" | "store_card" | "recurrent"
+export type Mode = "standard" | "store_card" | "recurrent"
 
-type HttpRequest = {
+export type HttpRequest = {
   headers?: ScalarMap
   params?: ScalarMap
   method: HttpMethod
@@ -42,30 +42,30 @@ type HttpRequest = {
   data?: {[key: string]: any}
 }
 
-type HttpResponse = {
+export type HttpResponse = {
   data: object;
 }
 
-type HttpClient = (r: HttpRequest) => Promise<HttpResponse>;
+export type HttpClient = (r: HttpRequest) => Promise<HttpResponse>;
 
-type Access = {
+export type Access = {
   token: string
   retrievedAt: number
   validFor: number
 }
 
-type Customer = {
+export type Customer = {
   firstName: string
   lastName: string
   email: string
 }
 
-type LimitOffset = {
+export type LimitOffset = {
   limit?: number
   offset?: number
 }
 
-type CreateCheckout = {
+export type CreateCheckout = {
   amount: number
   currency: string
   customer: Customer
@@ -76,7 +76,7 @@ type CreateCheckout = {
   metadata?: ScalarMap
 }
 
-type CreatedCheckout = {
+export type CreatedCheckout = {
   amount: number
   currency: string
   customer: Customer
@@ -92,7 +92,7 @@ type CreatedCheckout = {
   checkoutUrl: string
 }
 
-type Checkout = {
+export type Checkout = {
   amount: number
   currency: string
   customer: Customer
@@ -108,7 +108,7 @@ type Checkout = {
   status: string
 }
 
-type CreateWithdrawal = { 
+export type CreateWithdrawal = { 
   amount: number
   currency: string
   externalId: string
@@ -117,7 +117,7 @@ type CreateWithdrawal = {
   statementDescriptor?: string
 }
 
-type CreatedWithdrawal = {
+export type CreatedWithdrawal = {
   amount: number
   apiKeyId: string
   createdAt: number
@@ -132,7 +132,7 @@ type CreatedWithdrawal = {
   status: string
 }
 
-type Withdrawal = {
+export type Withdrawal = {
    amount: number
    apiKeyId: string
    createdAt: number
@@ -147,7 +147,7 @@ type Withdrawal = {
    status: string
 }
 
-type TokenDetails = {
+export type TokenDetails = {
   cardExpirationYear: string
   cardExpirationMonth: string
   cardNumberMasked: string
@@ -158,28 +158,28 @@ type TokenDetails = {
   status: string
 }
 
-type TokenInvalid = {
+export type TokenInvalid = {
   errors: {
     token: 'invalid'
   }
 }
 
-type TokenStatus = {
+export type TokenStatus = {
   status: TokenDetails | TokenInvalid | "no_tokens"
 }
 
-type TokenDeleted = {
+export type TokenDeleted = {
   status: "deleted"
 }
 
-type PaymentMethod = {
+export type PaymentMethod = {
   fixedFee: number
   identificator: string
   name: string
   percentualFee: number
 }
 
-type Balance = {
+export type Balance = {
   available: number
   currency: string
   pending: number
@@ -456,7 +456,7 @@ class Client {
   }
 }
 
-exports.createClient = ({
+export const createClient = ({
   clientId,
   clientSecret,
   httpClient = defaultHttpClient,
