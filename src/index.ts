@@ -70,6 +70,7 @@ export type CreateCheckout = {
   currency: string
   customer: Customer
   externalId: string
+  redirectUrl: string
   mode?: Mode
   recurrentToken?: string
   idempotencyKey?: string
