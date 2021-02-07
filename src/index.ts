@@ -60,6 +60,21 @@ export type Customer = {
   email: string
 }
 
+export type Address = {
+  name: string
+  addressLine1: string
+  addressLine2: string
+  postalCode: string
+  countryCode: string
+  city: string
+}
+
+export type Product = {
+  name: string
+  unitPrice: number
+  quantity: number
+}
+
 export type LimitOffset = {
   limit?: number
   offset?: number
@@ -69,6 +84,9 @@ export type CreateCheckout = {
   amount: number
   currency: string
   customer: Customer
+  billingAddress?: Address
+  shippingAddress?: Address
+  products: Array<Product>
   externalId: string
   redirectUrl: string
   mode?: Mode
@@ -81,6 +99,9 @@ export type CreatedCheckout = {
   amount: number
   currency: string
   customer: Customer
+  billingAddress?: Address
+  shippingAddress?: Address
+  products: Array<Product>
   id: number
   externalId: string
   idempotencyKey: string
@@ -242,7 +263,8 @@ class Client {
   }
 
   async createCheckout(input: CreateCheckout) : Promise<CreatedCheckout | TokenInvalid> {
-    return this.postAuthorizedSigned("/api/v1/checkouts", input, checkoutSignKeys) as Promise<CreatedCheckout>;
+    const normalized_addresses = this.normalizeCheckoutAddress(input) 
+    return this.postAuthorizedSigned("/api/v1/checkouts", normalized_addresses, checkoutSignKeys) as Promise<CreatedCheckout>;
   }
 
   async listCheckouts(params : LimitOffset = {}) : Promise<Checkout[]> {
@@ -454,6 +476,31 @@ class Client {
       .update(`${values.join('|')}|${nonce}|${this.clientSecret}`)
       .digest('hex')
       .toString()
+  }
+
+  normalizeCheckoutAddress(checkout: CreateCheckout) {
+    if ('billingAddress' in checkout) {
+      checkout = {...checkout, billingAddress: this.normalizeAddress(checkout.billingAddress)}
+    }
+
+    if ('shippingAddress' in checkout) {
+      checkout = {...checkout, shippingAddress: this.normalizeAddress(checkout.shippingAddress)}
+    }
+
+    return checkout
+  }
+
+  normalizeAddress(input: Address) {
+    let address = {
+      ...input,
+      address_line_1: input.addressLine1,
+      address_line_2: input.addressLine2
+    }
+
+    delete address["addressLine1"]
+    delete address["addressLine2"]
+
+    return address
   }
 }
 
