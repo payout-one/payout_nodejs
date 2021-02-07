@@ -86,7 +86,7 @@ export type CreateCheckout = {
   customer: Customer
   billingAddress?: Address
   shippingAddress?: Address
-  products: Array<Product>
+  products: Product[]
   externalId: string
   redirectUrl: string
   mode?: Mode
@@ -101,7 +101,7 @@ export type CreatedCheckout = {
   customer: Customer
   billingAddress?: Address
   shippingAddress?: Address
-  products: Array<Product>
+  products: Product[]
   id: number
   externalId: string
   idempotencyKey: string
@@ -263,8 +263,8 @@ class Client {
   }
 
   async createCheckout(input: CreateCheckout) : Promise<CreatedCheckout | TokenInvalid> {
-    const normalized_addresses = this.normalizeCheckoutAddress(input) 
-    return this.postAuthorizedSigned("/api/v1/checkouts", normalized_addresses, checkoutSignKeys) as Promise<CreatedCheckout>;
+    const normalizedAddresses = this.normalizeCheckoutAddress(input) 
+    return this.postAuthorizedSigned("/api/v1/checkouts", normalizedAddresses, checkoutSignKeys) as Promise<CreatedCheckout>;
   }
 
   async listCheckouts(params : LimitOffset = {}) : Promise<Checkout[]> {
@@ -491,14 +491,14 @@ class Client {
   }
 
   normalizeAddress(input: Address) {
-    let address = {
+    const address = {
       ...input,
       address_line_1: input.addressLine1,
       address_line_2: input.addressLine2
     }
 
-    delete address["addressLine1"]
-    delete address["addressLine2"]
+    delete address.addressLine1
+    delete address.addressLine2
 
     return address
   }
