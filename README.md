@@ -12,7 +12,7 @@ const { createClient } = require('payout_node_sdk')
 
 const credentials = {
   clientId: 'your client key',
-  clientSecret: 'your client secret',
+  clientSecret: 'your client secret'
 }
 
 const client = createClient(credentials)
@@ -50,7 +50,7 @@ since it is already checked in `sdk`
     firstName: "John",
     lastName: "Doe"
   },
-  id: 
+  id: 1,
   externalId: "id-in-mi-system-also",
   idempotencyKey: "idempotency",
   metadata: {type: "eshop"},
@@ -85,7 +85,7 @@ Response will by list of signed checkouts
     id:	1,
     externalId:	'f0ac316a-9ea6-7998-01a7-720437afb34c',
     idempotencyKey:	'31f0ac6a-9ea6-01a7-7998-720437afb34c',
-    metadata:	{type: 'eshop'}
+    metadata:	{type: 'eshop'},
     nonce:	'ZUc0Mk9sVXZDOXNsdklzMQ',
     object:	'checkout',
     payment: {
@@ -113,7 +113,7 @@ Response will by list of signed checkouts
     id:	2,
     externalId:	'external-id',
     idempotencyKey:	'idempotency-key',
-    metadata:	{type: 'eshop'}
+    metadata:	{type: 'eshop'},
     nonce:	'ZUc0Mk9sVXZDOXNsdkQ',
     object:	'checkout',
     payment: {
