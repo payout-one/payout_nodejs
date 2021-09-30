@@ -1,7 +1,27 @@
-import axios from 'axios'
+import { createHash, randomBytes } from 'crypto'
+
 import * as snakeCase from 'snakecase-keys'
 import * as camelCase from 'camelcase-keys'
-import { createHash, randomBytes } from 'crypto'
+
+import {
+  HttpClient,
+  HttpMethod,
+  HttpRequest,
+  HttpResponse,
+  ScalarMap,
+  defaultHttpClient
+} from './common'
+
+export {
+  wapConfigure,
+  wapGenerateAuthorizationUrl,
+  wapHandleRedirect,
+  wapGetToken,
+  wapAccounts,
+  wapAccountInfo,
+  wapTransactions,
+  wapRefreshToken
+} from './wap'
 
 const baseHeaders = {
   'Content-Type': 'application/json', 
@@ -21,32 +41,14 @@ const withdrawalSignKeys = [
   "iban"
 ]
 
+export type Mode = "standard" | "store_card" | "recurrent"
+
 export type ClientConfig = {
   clientId: string;
   clientSecret: string;
   httpClient?: HttpClient;
   endpointUrl?: string;
 }
-
-export type ScalarMap = {[key: string]: string|number}
-
-export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE"
-
-export type Mode = "standard" | "store_card" | "recurrent"
-
-export type HttpRequest = {
-  headers?: ScalarMap
-  params?: ScalarMap
-  method: HttpMethod
-  url: string
-  data?: {[key: string]: any}
-}
-
-export type HttpResponse = {
-  data: object;
-}
-
-export type HttpClient = (r: HttpRequest) => Promise<HttpResponse>;
 
 export type Access = {
   token: string
@@ -205,10 +207,6 @@ export type Balance = {
   available: number
   currency: string
   pending: number
-}
-
-function defaultHttpClient(r: HttpRequest) : Promise<HttpResponse> {
-  return axios.request(r);
 }
 
 function castNumber(input: any) {
@@ -474,6 +472,7 @@ class Client {
   signValues(nonce : string, values: string[]) {
     return createHash('sha256')
       .update(`${values.join('|')}|${nonce}|${this.clientSecret}`)
+
       .digest('hex')
       .toString()
   }
