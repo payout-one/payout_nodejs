@@ -7,7 +7,6 @@ import {
   HttpClient,
   HttpMethod,
   HttpRequest,
-  HttpResponse,
   ScalarMap,
   defaultHttpClient
 } from './common'
@@ -349,7 +348,7 @@ class Client {
 
   signData(keys : string[]) {
     return async (conn : HttpRequest) => {
-      const signValues = keys.map((key : string) => conn.data[key] || "")
+      const signValues = keys.map((key : string) => conn.data[key] ?? "")
 
       const {
         nonce,
@@ -374,7 +373,7 @@ class Client {
         signature: remoteSignature = null
       } = data
 
-      const localSignature = this.signValues(nonce, signKeys.map(k => data[k] || ""))
+      const localSignature = this.signValues(nonce, signKeys.map(k => data[k] ?? ""))
 
       if (remoteSignature !== localSignature) {
         throw new Error("Invalid server signature")
