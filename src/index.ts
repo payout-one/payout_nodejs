@@ -74,6 +74,7 @@ export type Product = {
   name: string
   unitPrice: number
   quantity: number
+  offerId?: string
 }
 
 export type LimitOffset = {
@@ -94,6 +95,7 @@ export type CreateCheckout = {
   recurrentToken?: string
   idempotencyKey?: string
   metadata?: ScalarMap
+  shouldSplit?: boolean
 }
 
 export type CreatedCheckout = {
